@@ -1,7 +1,9 @@
 package com.unab_library.modules.users;
 
 import java.util.ArrayList;
-import com.unab_library.common.enums.GenderEnum;
+import java.util.List;
+
+import com.unab_library.common.enums.Gender;
 import java.util.logging.Logger;
 
 public class Teacher extends Person {
@@ -9,14 +11,26 @@ public class Teacher extends Person {
     private String profession;
     private ArrayList<AcademicDegree> academicDegrees;
 
-    public Teacher(String identityDocument, GenderEnum gender, String fullName, String profession) {
+    // For master or doctorate degree
+    public Teacher(String identityDocument, Gender gender, String fullName, String profession, AcademicDegree academicDegree) {
         super(identityDocument, gender, fullName);
         this.profession = profession;
         this.academicDegrees = new ArrayList<>();
+        this.academicDegrees.add(academicDegree);
+    }
+    // For master and doctorate degree
+    public Teacher(String identityDocument, Gender gender, String fullName, String profession, List<AcademicDegree> academicDegrees) {
+        super(identityDocument, gender, fullName);
+        this.profession = profession;
+        this.academicDegrees = new ArrayList<>(academicDegrees);
     }
 
     public void addAcademicDegree(AcademicDegree academicDegree) {
         this.academicDegrees.add(academicDegree);
+    }
+
+    public void addAcademicDegrees(List<AcademicDegree> academicDegrees) {
+        this.academicDegrees.addAll(academicDegrees);
     }
 
     @Override

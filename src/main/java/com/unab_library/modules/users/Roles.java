@@ -1,11 +1,10 @@
 package com.unab_library.modules.users;
 
-public enum AcademicDegreeCategory {
-    MASTER("Master"),
-    DOCTORATE("Doctorate");
+public enum Roles {
+    STUDENT("Student"), TEACHER("Teacher");
     private String name;
 
-    AcademicDegreeCategory(String name) {
+    Roles(String name) {
         this.name = name;
     }
 

@@ -19,11 +19,11 @@ La implementación asegura que la persistencia de datos se maneje de manera efic
 
 1. Clona el repositorio:
     ```bash
-    git clone https://github.com/tu_usuario/tu_repositorio.git
+    git clone https://github.com/estebangarviso/Mono.UNAB.Library.git
     ```
 2. Navega al directorio del proyecto:
     ```bash
-    cd tu_repositorio
+    cd Mono.UNAB.Library
     ```
 3. Compila el proyecto usando Maven:
     ```bash
@@ -31,7 +31,7 @@ La implementación asegura que la persistencia de datos se maneje de manera efic
     ```
 4. Corre la aplicación:
     ```bash
-    java -jar target/tu_repositorio-1.0-SNAPSHOT.jar
+    java -jar target/Mono.UNAB.Library-1.0-SNAPSHOT.jar
     ```
 
 ### Uso
