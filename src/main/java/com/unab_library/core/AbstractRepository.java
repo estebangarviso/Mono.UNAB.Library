@@ -1,14 +1,113 @@
 package com.unab_library.core;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.*;
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 public abstract class AbstractRepository<T> {
     protected ArrayList<T> items;
+    private static final String DATA_DIR = "data";
+    private static final String TRANSACTION_SUFFIX = "_transactions.log";
+    private final Gson gson;
+    private final String fileName;
+    private final Type typeToken;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    protected AbstractRepository() {
-        items = new ArrayList<>();
+    protected AbstractRepository(String fileName, TypeToken<ArrayList<T>> token) {
+        this.fileName = DATA_DIR + "/" + fileName;
+        this.typeToken = token.getType();
+        this.gson = new Gson().newBuilder()
+            .registerTypeAdapter(Transaction.class, new TransactionAdapter<>(token))
+            .create();
+        new File(DATA_DIR).mkdirs();
+        this.items = loadItemsWithTransactions();
+    }
+
+    private ArrayList<T> loadItemsWithTransactions() {
+        lock.readLock().lock();
+        try {
+            // Load base file
+            ArrayList<T> loadedItems = loadBaseItems();
+            
+            // Apply transactions
+            Path transactionFile = Paths.get(fileName + TRANSACTION_SUFFIX);
+            if (Files.exists(transactionFile)) {
+                try (BufferedReader reader = Files.newBufferedReader(transactionFile)) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        Transaction<T> transaction = gson.fromJson(line, Transaction.class);
+                        applyTransaction(loadedItems, transaction);
+                    }
+                }
+            }
+            return loadedItems;
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading data", e);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    private ArrayList<T> loadBaseItems() {
+        File file = new File(fileName);
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+
+        try (Reader reader = new FileReader(file)) {
+            return gson.fromJson(reader, typeToken);
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading data from " + fileName, e);
+        }
+    }
+
+    private void applyTransaction(ArrayList<T> items, Transaction<T> transaction) {
+        switch (transaction.type) {
+            case ADD:
+                items.add(transaction.item);
+                break;
+            case DELETE:
+                items.remove(transaction.index);
+                break;
+            case UPDATE:
+                items.set(transaction.index, transaction.item);
+                break;
+        }
+    }
+
+    private void appendTransaction(Transaction<T> transaction) {
+        lock.writeLock().lock();
+        try {
+            Files.writeString(
+                Paths.get(fileName + TRANSACTION_SUFFIX),
+                gson.toJson(transaction) + System.lineSeparator(),
+                StandardOpenOption.CREATE, 
+                StandardOpenOption.APPEND
+            );
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Error writing transaction", e);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     //#region Create
@@ -17,7 +116,9 @@ public abstract class AbstractRepository<T> {
      * @param item
      */
     protected void save(T item) {
+        Transaction<T> transaction = new Transaction<>(TransactionType.ADD, items.size(), item);
         items.add(item);
+        appendTransaction(transaction);
     }
     //#endregion
     //#region Read
@@ -72,22 +173,30 @@ public abstract class AbstractRepository<T> {
     }
 
     protected <R> Result<T> getByProperty(Function<T, R> propertyGetter, R value) {
-        List<T> items = getAll();
-        for (int i = 0; i < items.size(); i++) {
-            T item = items.get(i);
-            if (propertyGetter.apply(item).equals(value)) {
-                return Result.<T>builder()
-                    .setIndex(i)
-                    .setValue(item)
-                    .setSuccess(true)
-                    .build();
+        try {
+            lock.readLock().lock();
+            for (int i = 0; i < items.size(); i++) {
+                T item = items.get(i);
+                if (propertyGetter.apply(item).equals(value)) {
+                    return new Result.Builder<T>()
+                        .setIndex(i)
+                        .setSuccess(true)
+                        .setValue(item)
+                        .build();
+                }
             }
-        }
-        return Result.<T>builder()
-                .setIndex(-1)
-                .setValue(null)
+            return new Result.Builder<T>()
                 .setSuccess(false)
+                .setError(new Exception("Item not found"))
                 .build();
+        } catch (Exception e) {
+            return new Result.Builder<T>()
+                .setSuccess(false)
+                .setError(e)
+                .build();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
     //#endregion
     //#region Delete
@@ -96,7 +205,9 @@ public abstract class AbstractRepository<T> {
      * @param index
      */
     protected void delete(int index) {
+        Transaction<T> transaction = new Transaction<>(TransactionType.DELETE, index, null);
         items.remove(index);
+        appendTransaction(transaction);
     }
 
     /**
@@ -113,29 +224,93 @@ public abstract class AbstractRepository<T> {
      * @param item
      */
     protected void update(int index, T item) {
+        Transaction<T> transaction = new Transaction<>(TransactionType.UPDATE, index, item);
         items.set(index, item);
+        appendTransaction(transaction);
     }
     //#endregion
 
-    //#region Result class to handle array index and boolean result
+    private enum TransactionType {
+        ADD, DELETE, UPDATE
+    }
+
+    private static class Transaction<T> {
+        TransactionType type;
+        int index;
+        JsonElement itemJson;  // Changed from T to JsonElement
+        transient T item;      // Transient field for deserialized item
+
+        Transaction(TransactionType type, int index, T item) {
+            this.type = type;
+            this.index = index;
+            this.item = item;
+            this.itemJson = item != null ? new Gson().toJsonTree(item) : null;
+        }
+    }
+
+    private class TransactionAdapter<T> extends TypeAdapter<Transaction<T>> {
+        private final TypeToken<ArrayList<T>> typeToken;
+
+        TransactionAdapter(TypeToken<ArrayList<T>> typeToken) {
+            this.typeToken = typeToken;
+        }
+
+        @Override
+        public void write(JsonWriter out, Transaction<T> transaction) throws IOException {
+            out.beginObject();
+            out.name("type").value(transaction.type.name());
+            out.name("index").value(transaction.index);
+            out.name("itemJson");
+            if (transaction.itemJson != null) {
+                gson.toJson(transaction.itemJson, out);
+            } else {
+                out.nullValue();
+            }
+            out.endObject();
+        }
+
+        @Override
+        public Transaction<T> read(JsonReader in) throws IOException {
+            in.beginObject();
+            TransactionType type = null;
+            int index = -1;
+            JsonElement itemJson = null;
+
+            while (in.hasNext()) {
+                switch (in.nextName()) {
+                    case "type":
+                        type = TransactionType.valueOf(in.nextString());
+                        break;
+                    case "index":
+                        index = in.nextInt();
+                        break;
+                    case "itemJson":
+                        itemJson = JsonParser.parseReader(in);
+                        break;
+                    default:
+                        in.skipValue();
+                }
+            }
+            in.endObject();
+
+            Transaction<T> transaction = new Transaction<>(type, index, null);
+            transaction.itemJson = itemJson;
+            if (itemJson != null) {
+                Type itemType = ((ParameterizedType) typeToken.getType()).getActualTypeArguments()[0];
+                transaction.item = gson.fromJson(itemJson, itemType);
+            }
+            return transaction;
+        }
+    }
+
+    //#region Result
     public static class Result<T> {
-        private int index;
         private boolean success;
         private T value;
+        private int index;
+        private Exception error;
 
-        private Result() {
-            index = -1;
-            success = false;
-            value = null;
-        }
-
-        public static <T> ResultBuilder<T> builder() {
-            return new ResultBuilder<>(new Result<>());
-        }
-
-        public int getIndex() {
-            return index;
-        }
+        private Result() {}
 
         public boolean isSuccess() {
             return success;
@@ -144,31 +319,45 @@ public abstract class AbstractRepository<T> {
         public T getValue() {
             return value;
         }
-    }
-    protected static class ResultBuilder<T> {
-        private Result<T> instance;
 
-        private ResultBuilder(Result<T> instance) {
-            this.instance = instance;
+        public int getIndex() {
+            return index;
         }
 
-        public ResultBuilder<T> setIndex(int index) {
-            instance.index = index;
-            return this;
+        public Exception getError() {
+            return error;
         }
 
-        public ResultBuilder<T> setSuccess(boolean success) {
-            instance.success = success;
-            return this;
+        public static <T> Builder<T> builder() {
+            return new Builder<>();
         }
 
-        public ResultBuilder<T> setValue(T found) {
-            instance.value = found;
-            return this;
-        }
+        public static class Builder<T> {
+            private Result<T> result = new Result<>();
 
-        public Result<T> build() {
-            return instance;
+            public Builder<T> setIndex(int index) {
+                result.index = index;
+                return this;
+            }
+
+            public Builder<T> setSuccess(boolean success) {
+                result.success = success;
+                return this;
+            }
+
+            public Builder<T> setValue(T value) {
+                result.value = value;
+                return this;
+            }
+
+            public Builder<T> setError(Exception error) {
+                result.error = error;
+                return this;
+            }
+
+            public Result<T> build() {
+                return result;
+            }
         }
     }
     //#endregion

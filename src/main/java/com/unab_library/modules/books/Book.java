@@ -5,6 +5,7 @@ import java.util.List;
 import com.unab_library.common.exception.general.BadRequestException;
 import com.unab_library.common.exception.general.InternalServerErrorException;
 import com.unab_library.common.libs.MediaUtils;
+import com.unab_library.modules.books.Book.BookBuilder;
 
 public class Book implements BookInterface {
     private Book() {}
@@ -56,23 +57,33 @@ public class Book implements BookInterface {
         return this.availableStock;
     }
 
-    public byte[] getCover() {
-        return cover;
+    public String getCoverPath() {
+        return coverPath;
     }
 
-    public byte[] setCover(String coverPath) {
+    public String setCover(String coverPath) {
+        if (!isValidCover(coverPath)) {
+            throw BadRequestException.invalidBookCoverPath();
+        }
+        this.coverPath = coverPath;
+        return this.coverPath;
+    }
+
+    public byte[] getCoverBytes() {
         try {
-            if (!isValidCover(coverPath)) {
-                throw BadRequestException.invalidBookCoverPath();
-            }
-            this.cover = MediaUtils.loadImage(coverPath);
+            return MediaUtils.loadImage(this.coverPath);
         } catch (Exception e) {
             throw InternalServerErrorException.errorLoadingBookCover(e);
         }
-        return this.cover;
     }
 
     //#region BookInterface implementation
+    public void decreaseInventoryStock() {
+        if (this.inventoryStock <= 0) {
+            throw BadRequestException.invalidInventoryStock("Inventory stock cannot be less than or equal to 0");
+        }
+        this.inventoryStock--;
+    }
     public void decreaseAvailableStock() {
         if (this.availableStock <= 0) {
             throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0");
@@ -97,13 +108,13 @@ public class Book implements BookInterface {
 
     public Book validateStocks() {
         if (this.inventoryStock <= 0) {
-            throw BadRequestException.invalidPhysicalStock("Physical stock cannot be less than or equal to 0");
+            throw BadRequestException.invalidInventoryStock("Inventory stock cannot be less than or equal to 0");
         }
         if (this.inventoryStock < this.availableStock) {
-            throw BadRequestException.invalidPhysicalStock("Physical stock cannot be less than available stock");
+            throw BadRequestException.invalidInventoryStock("Inventory stock cannot be less than available stock");
         }
         if (this.availableStock <= 0 || this.availableStock > this.inventoryStock) {
-            throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0 or exceed physical stock");
+            throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0 or exceed inventory stock");
         }
         return this;
     }
@@ -116,7 +127,7 @@ public class Book implements BookInterface {
     private String author;
     private int inventoryStock;
     private int availableStock;
-    private byte[] cover;
+    private String coverPath;
 
     public static BookBuilder builder() {
         return new BookBuilder();

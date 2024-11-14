@@ -22,6 +22,10 @@ public class Person {
     public String getIdentityDocument() {
         return identityDocument;
     }
+
+    public Gender getGender() {
+        return gender;
+    }
     
     public void showData() {
         String identityDocumentString = String.format("Identity document: %s", identityDocument);

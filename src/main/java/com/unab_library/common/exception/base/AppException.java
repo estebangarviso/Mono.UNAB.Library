@@ -12,7 +12,7 @@ public class AppException extends RuntimeException {
         this.code = code;
     }
 
-    protected AppExceptionCode getCode() {
+    public AppExceptionCode getCode() {
         return code;
     }
 }

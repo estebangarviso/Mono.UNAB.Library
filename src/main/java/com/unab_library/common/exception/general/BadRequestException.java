@@ -21,8 +21,8 @@ public class BadRequestException extends AppException {
         return new BadRequestException(AppExceptionCode.BOOK_EXISTS, new Throwable("Book with ISBN " + isbn + " already exists"));
     }
 
-    public static BadRequestException invalidInventoryStock() {
-        return new BadRequestException(AppExceptionCode.INVALID_PHYSICAL_STOCK, new Throwable("Invalid physical stock"));
+    public static BadRequestException invalidInventoryStock(String message) {
+        return new BadRequestException(AppExceptionCode.INVALID_INVENTORY_STOCK, new Throwable(message));
     }
 
     public static BadRequestException invalidAvailableStock() {
@@ -36,8 +36,8 @@ public class BadRequestException extends AppException {
         return new BadRequestException(AppExceptionCode.INVALID_ROLE, new Throwable("Invalid role"));
     }
 
-    public static BadRequestException invalidReturnDate() {
-        return new BadRequestException(AppExceptionCode.INVALID_RETURN_DATE, new Throwable("Invalid return date"));
+    public static BadRequestException invalidReturnDate(String message) {
+        return new BadRequestException(AppExceptionCode.INVALID_RETURN_DATE, new Throwable(message));
     }
 
     public static BadRequestException bookAlreadyHeld() {
@@ -52,7 +52,27 @@ public class BadRequestException extends AppException {
         return new BadRequestException(AppExceptionCode.BOOK_NOT_AVAILABLE, new Throwable("Book is not available"));
     }
 
-    public static BadRequestException invalidPhysicalStock(String string) {
-        return new BadRequestException(AppExceptionCode.INVALID_PHYSICAL_STOCK, new Throwable(string));
+    public static BadRequestException bookReturnBookMismatch() {
+        return new BadRequestException(AppExceptionCode.BOOK_RETURN_BOOK_MISMATCH, new Throwable("Book loan and return books do not match"));
+    }
+
+    public static BadRequestException invalidTeacherData(String message) {
+        return new BadRequestException(AppExceptionCode.INVALID_TEACHER_DATA, new Throwable(message));
+    }
+
+    public static BadRequestException currentCareerIsRequired() {
+        return new BadRequestException(AppExceptionCode.CURRENT_CAREER_IS_REQUIRED, new Throwable("Current career is required."));
+    }
+
+    public static BadRequestException identityDocumentIsRequired() {
+        return new BadRequestException(AppExceptionCode.IDENTITY_DOCUMENT_IS_REQUIRED, new Throwable("Identity document is required."));
+    }
+
+    public static BadRequestException genderIsRequired() {
+        return new BadRequestException(AppExceptionCode.GENDER_IS_REQUIRED, new Throwable("Gender is required."));
+    }
+
+    public static BadRequestException fullNameIsRequired() {
+        return new BadRequestException(AppExceptionCode.FULL_NAME_IS_REQUIRED, new Throwable("Full name is required."));
     }
 }

@@ -1,5 +1,4 @@
 package com.unab_library.common.libs;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,12 +6,24 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class MediaUtils {
+    private static final String RESOURCES_DIR = "src/main/resources/";
     private MediaUtils() {
         // Private constructor to prevent instantiation
     }
     public static byte[] loadImage(String path) throws IOException {
-        File file = new File(path);
-        return Files.readAllBytes(file.toPath());
+
+        Path imagePath = Paths.get(RESOURCES_DIR + path);
+        try {
+            if (imagePath == null) {
+                throw new IllegalArgumentException("Image path cannot be null");
+            }
+            if (!Files.exists(imagePath)) {
+                throw new IllegalArgumentException("Image file does not exist: " + imagePath);
+            }
+            return Files.readAllBytes(imagePath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read image file: " + imagePath, e);
+        }
     }
     public static String getFileExtension(String fileName) {
         if (fileName == null || fileName.isEmpty()) {

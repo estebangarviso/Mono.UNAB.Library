@@ -2,18 +2,25 @@ package com.unab_library.modules.books;
 
 import com.unab_library.common.exception.general.NotFoundException;
 import com.unab_library.core.AbstractRepository;
+
+import com.google.gson.reflect.TypeToken;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.ArrayList;
 
 public class BookRepository extends AbstractRepository<Book> {
 
-    public void save(BookSaveDTO bookDTO) {
+    private BookRepository() {
+        super("books.json", new TypeToken<ArrayList<Book>>(){});
+    }
+    
+    public void save(BookSaveDTO bookSaveDTO) {
         Book newBook = Book.builder()
-            .setTitle(bookDTO.getTitle())
-            .setAuthor(bookDTO.getAuthor())
-            .setIsbn(bookDTO.getIsbn())
-            .setInventoryStock(bookDTO.getInventoryStock())
-            .setAvailableStock(bookDTO.getAvailableStock())
-            .setCover(bookDTO.getCoverPath())
+            .setTitle(bookSaveDTO.title())
+            .setAuthor(bookSaveDTO.author())
+            .setIsbn(bookSaveDTO.isbn())
+            .setInventoryStock(bookSaveDTO.inventoryStock())
+            .setAvailableStock(bookSaveDTO.availableStock())
+            .setCover(bookSaveDTO.coverPath())
             .build();
         this.save(newBook);
     }
@@ -42,9 +49,6 @@ public class BookRepository extends AbstractRepository<Book> {
         }
         return false;
     }
-
-    // private constructor to prevent instantiation
-    private BookRepository() {}
 
     private static final AtomicReference<BookRepository> INSTANCE = new AtomicReference<>();
 

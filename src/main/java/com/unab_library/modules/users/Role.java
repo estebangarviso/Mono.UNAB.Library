@@ -1,10 +1,10 @@
 package com.unab_library.modules.users;
 
-public enum Roles {
+public enum Role {
     STUDENT("Student"), TEACHER("Teacher");
     private String name;
 
-    Roles(String name) {
+    Role(String name) {
         this.name = name;
     }
 
