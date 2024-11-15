@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class MediaUtils {
-    private static final String RESOURCES_DIR = "src/main/resources/";
+    public static final String RESOURCES_DIR = "src/main/resources/";
     private MediaUtils() {
         // Private constructor to prevent instantiation
     }

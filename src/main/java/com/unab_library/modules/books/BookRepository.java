@@ -1,11 +1,11 @@
 package com.unab_library.modules.books;
 
+import com.google.gson.reflect.TypeToken;
 import com.unab_library.common.exception.general.NotFoundException;
 import com.unab_library.core.AbstractRepository;
-
-import com.google.gson.reflect.TypeToken;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
 
 public class BookRepository extends AbstractRepository<Book> {
 
@@ -13,7 +13,7 @@ public class BookRepository extends AbstractRepository<Book> {
         super("books.json", new TypeToken<ArrayList<Book>>(){});
     }
     
-    public void save(BookSaveDTO bookSaveDTO) {
+    public Result<Book> save(BookSaveDTO bookSaveDTO) {
         Book newBook = Book.builder()
             .setTitle(bookSaveDTO.title())
             .setAuthor(bookSaveDTO.author())
@@ -22,7 +22,7 @@ public class BookRepository extends AbstractRepository<Book> {
             .setAvailableStock(bookSaveDTO.availableStock())
             .setCover(bookSaveDTO.coverPath())
             .build();
-        this.save(newBook);
+        return this.save(newBook);
     }
 
     public void deleteByIsbn(String isbn) {
@@ -48,6 +48,19 @@ public class BookRepository extends AbstractRepository<Book> {
             }
         }
         return false;
+    }
+
+    public void updateAvailableStock(String isbn, int quantity) {
+        // get the book with the provided ISBN
+        Result<Book> result = getByIsbn(isbn);
+        // validate: ISBN exists
+        if (!result.isSuccess()) {
+            throw NotFoundException.bookNotFound(isbn);
+        }
+        // decrement the available stock of the book with the provided ISBN
+        Book book = result.getValue();
+        book.setAvailableStock(quantity);
+        this.update(result.getIndex(), book);
     }
 
     private static final AtomicReference<BookRepository> INSTANCE = new AtomicReference<>();

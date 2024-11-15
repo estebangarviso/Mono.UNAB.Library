@@ -1,6 +1,4 @@
-package com.unab_library.modules.book_returns;
-
-import com.unab_library.modules.book_loans.BookLoan;
+package com.unab_library.modules.book_management.book_returns;
 
 public record BookReturnSaveDTO(
     /**

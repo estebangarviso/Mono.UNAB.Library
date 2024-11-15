@@ -8,12 +8,12 @@ El equipo de desarrollo de la biblioteca de la universidad ha creado este reposi
 - Escritura de datos en archivos
 - Gestión de entidades de datos utilizando clases de repositorio
 
-La implementación asegura que la persistencia de datos se maneje de manera eficiente y se adhiera a las mejores prácticas de la programación orientada a objetos.
+La implementación asegura que la persistencia de datos se maneje de manera eficiente mediante el registro de todas las transacciones históricas de la app, y se adhiera a las mejores prácticas de la programación orientada a objetos.
 
 ### Requisitos
 
-- Java 17
-- Maven
+- Java 23.0.1
+- Maven 3.9.8
 
 ### Instalación
 
@@ -27,7 +27,7 @@ La implementación asegura que la persistencia de datos se maneje de manera efic
     ```
 3. Compila el proyecto usando Maven:
     ```bash
-    mvn clean install
+    mvn clean && mvn dependency:resolve && mvn package
     ```
 4. Corre la aplicación:
     ```bash

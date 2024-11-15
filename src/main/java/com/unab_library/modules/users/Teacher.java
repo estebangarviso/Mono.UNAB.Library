@@ -1,15 +1,12 @@
 package com.unab_library.modules.users;
 
+import com.unab_library.common.enums.Gender;
+import com.unab_library.common.exception.general.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.unab_library.common.enums.Gender;
-import com.unab_library.common.exception.general.BadRequestException;
-
-import java.util.logging.Logger;
 
 public class Teacher extends Person {
-    private static final Logger LOGGER = Logger.getLogger(Teacher.class.getName());
     private String profession;
     private ArrayList<AcademicDegree> academicDegrees;
 
@@ -37,46 +34,49 @@ public class Teacher extends Person {
     }
 
     @Override
-    public void showData() {
-        super.showData();
-        String professionString = String.format("Profession: %s", profession);
-        LOGGER.info(professionString);
-        LOGGER.info("Academic degrees:");
-        for (AcademicDegree academicDegree : academicDegrees) {
-            academicDegree.showData();
-        }
+    public String toString() {
+        return String.format("Teacher[" +
+            "identityDocument='%s', " +
+            "fullName='%s', " +
+            "gender='%s', " +
+            "profession='%s', " +
+            "academicDegrees=%s" +
+            "]",
+            getIdentityDocument(), getFullName(), getGender().getName(), getProfession(), getAcademicDegrees().toString());
+    }
+
+    public static TeacherBuilder builder() {
+        return new TeacherBuilder();
     }
 
     // Builder
-    public static class TeacherBuilder {
+    protected static class TeacherBuilder {
         private Person person;
         private String profession;
         private List<AcademicDegree> academicDegrees;
 
-        public TeacherBuilder(Person person) {
+        public TeacherBuilder setPerson(Person person) {
             this.person = person;
+            return this;
         }
 
         public TeacherBuilder setProfession(String profession) {
+            if (profession == null) {
+                throw BadRequestException.invalidUserData("Profession is required");
+            }
             this.profession = profession;
             return this;
         }
 
         public TeacherBuilder setAcademicDegrees(List<AcademicDegree> academicDegrees) {
+            if (academicDegrees == null || academicDegrees.isEmpty()) {
+                throw BadRequestException.invalidUserData("Academic degrees are required");
+            }
             this.academicDegrees = academicDegrees;
             return this;
         }
 
         public Teacher build() {
-            if (person == null) {
-                throw BadRequestException.invalidTeacherData("Person data is required");
-            }
-            if (profession == null) {
-                throw BadRequestException.invalidTeacherData("Profession is required");
-            }
-            if (academicDegrees == null) {
-                throw BadRequestException.invalidTeacherData("At least one academic degree is required");
-            }
             return new Teacher(person.getIdentityDocument(), person.getGender(), person.getFullName(), profession, academicDegrees);
         }
     }

@@ -1,4 +1,4 @@
-package com.unab_library.modules.book_loans;
+package com.unab_library.modules.book_management.book_loans;
 
 import java.util.Date;
 

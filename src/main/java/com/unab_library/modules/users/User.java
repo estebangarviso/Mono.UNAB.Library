@@ -1,30 +1,15 @@
 package com.unab_library.modules.users;
 
-import java.util.List;
-import java.util.logging.Logger;
-
 import com.unab_library.common.exception.general.BadRequestException;
-import com.unab_library.modules.book_loans.BookLoan;
+import com.unab_library.modules.book_management.book_loans.BookLoan;
+import java.util.List;
+
 
 public class User implements UserInterface {
-    private static final Logger LOGGER = Logger.getLogger(User.class.getName());
     private Role role;
     private String career;
     private Person person;
     private BookLoan loan;
-
-    /**
-     * Constructor for users
-     * @param person
-     * @param career
-     * @param loan
-     */
-    private User(Person person, String career, BookLoan loan) {
-        this.role = Role.STUDENT;
-        this.career = career;
-        this.person = person;
-        this.loan = loan;
-    }
 
     /**
      * Constructor for students
@@ -36,7 +21,7 @@ public class User implements UserInterface {
         this.role = Role.STUDENT;
         this.career = career;
         this.person = person;
-        Student student = Student.StudentBuilder(person)
+        Student student = Student.builder(person)
         .setCurrentCareer(currentCareer)
         .build();
         this.person = student;
@@ -52,7 +37,8 @@ public class User implements UserInterface {
     public User(Person person, String career, String profession, AcademicDegree academicDegree) {
         this.role = Role.TEACHER;
         this.career = career;
-        Teacher teacher = Teacher.TeacherBuilder(person)
+        Teacher teacher = Teacher.builder()
+        .setPerson(person)
         .setProfession(profession)
         .setAcademicDegrees(List.of(academicDegree))
         .build();
@@ -69,7 +55,8 @@ public class User implements UserInterface {
     public User(Person person, String career, String profession, List<AcademicDegree> academicDegrees) {
         this.role = Role.TEACHER;
         this.career = career;
-        Teacher teacher = Teacher.TeacherBuilder(person)
+        Teacher teacher = Teacher.builder()
+        .setPerson(person)
         .setProfession(profession)
         .setAcademicDegrees(academicDegrees)
         .build();
@@ -80,8 +67,9 @@ public class User implements UserInterface {
         return person.getIdentityDocument();
     }
 
+    @Override
     public boolean hasActiveLoan() {
-        return loan == null;
+        return loan != null;
     }
 
     public Role getRole() {
@@ -100,16 +88,26 @@ public class User implements UserInterface {
         return loan;
     }
 
-    public void setLoan(BookLoan loan) {
+    private void setLoan(BookLoan loan) {
         this.loan = loan;
     }
 
-    public void showData() {
-        String roleString = String.format("Role: %s", role.getName());
-        String careerString = String.format("Career: %s", career);
-        LOGGER.info(roleString);
-        LOGGER.info(careerString);
-        person.showData();
+    public void releaseLoan() {
+        setLoan(null);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("User[" +
+            "role='%s', " +
+            "career='%s', " +
+            "person='%s', " +
+            "loan=%s" +
+            "]", getRole().getName(), getCareer(), getPerson().toString(), hasActiveLoan() ? loan.toString() : "null");
+    }
+
+    public static UserBuilder builder(Role role, Person person) {
+        return new UserBuilder(role, person);
     }
 
     // Builder
@@ -131,12 +129,33 @@ public class User implements UserInterface {
             return this;
         }
 
+        public UserBuilder setCurrentCareer(String currentCareer) {
+            this.currentCareer = currentCareer;
+            return this;
+        }
+
+        public UserBuilder setProfession(String profession) {
+            this.profession = profession;
+            return this;
+        }
+
+        public UserBuilder setAcademicDegrees(List<AcademicDegree> academicDegrees) {
+            this.academicDegrees = academicDegrees;
+            return this;
+        }
+
         public User build() {
             if (role == null) {
                 throw BadRequestException.invalidUserData("Role is required");
             }
-            if (person == null) {
-                throw BadRequestException.invalidUserData("Person data is required");
+            if (person == null || person.getIdentityDocument() == null) {
+                throw BadRequestException.invalidUserData("Identity document is required");
+            }
+            if (person.getGender() == null) {
+                throw BadRequestException.invalidUserData("Gender is required");
+            }
+            if (person.getFullName() == null) {
+                throw BadRequestException.invalidUserData("Full name is required");
             }
             if (career == null) {
                 throw BadRequestException.invalidUserData("Career is required");

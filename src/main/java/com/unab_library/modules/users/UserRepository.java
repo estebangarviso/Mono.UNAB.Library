@@ -1,11 +1,11 @@
 package com.unab_library.modules.users;
 
+import com.google.gson.reflect.TypeToken;
+import com.unab_library.core.AbstractRepository;
+import com.unab_library.core.AbstractRepository.Result;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.gson.reflect.TypeToken;
-import com.unab_library.core.AbstractRepository;
-import com.unab_library.modules.books.Book;
 
 public class UserRepository extends AbstractRepository<User> {
     // private constructor to prevent instantiation
@@ -35,12 +35,32 @@ public class UserRepository extends AbstractRepository<User> {
         return false;
     }
 
-    public void save(UserSaveDTO userSaveDTO) {
-        User newUser = User.builder()
-            .setIdentityDocument(userSaveDTO.identityDocument())
-            .setPerson(userSaveDTO.person())
-            .setRole(userSaveDTO.role())
+    /**
+     * Saves a student.
+     * 
+     * @param userStudentSaveDTO the student to save
+     */
+    public Result<User> save(UserStudentSaveDTO userStudentSaveDTO) {
+        User newUser = User.builder(Role.STUDENT, userStudentSaveDTO.person())
+            .setCareer(userStudentSaveDTO.career())
+            .setCurrentCareer(userStudentSaveDTO.currentCareer())
             .build();
-        this.save(newUser);
+
+        return this.save(newUser);
+    }
+
+    /**
+     * Saves a teacher.
+     * 
+     * @param userTeacherSaveDTO the teacher to save
+     */
+    public Result<User> save(UserTeacherSaveDTO userTeacherSaveDTO) {
+        User newUser = User.builder(Role.TEACHER, userTeacherSaveDTO.person())
+            .setCareer(userTeacherSaveDTO.career())
+            .setProfession(userTeacherSaveDTO.profession())
+            .setAcademicDegrees(userTeacherSaveDTO.academicDegrees())
+            .build();
+
+        return this.save(newUser);
     }
 }

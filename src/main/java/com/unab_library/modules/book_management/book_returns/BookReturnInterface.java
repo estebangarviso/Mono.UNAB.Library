@@ -1,4 +1,4 @@
-package com.unab_library.modules.book_returns;
+package com.unab_library.modules.book_management.book_returns;
 
 public interface BookReturnInterface {
     /**

@@ -18,6 +18,9 @@ public enum AppExceptionCode {
     IDENTITY_DOCUMENT_IS_REQUIRED(1013, 400, "error.identity.document.cannot.be.null"),
     FULL_NAME_IS_REQUIRED(1014, 400, "error.full.name.cannot.be.null"),
     GENDER_IS_REQUIRED(1015, 400, "error.gender.cannot.be.null"),
+    INVALID_USER_DATA(1016, 400, "error.invalid.user.data"),
+    INVALID_BOOK_ISBN(1017, 400, "error.invalid.book.isbn"),
+    INVALID_IDENTITY_DOCUMENT(1018, 400, "error.invalid.identity.document"),
     // Not Found
     BOOK_NOT_FOUND(2001, 404, "error.book.not.found"),
     USER_NOT_FOUND(2002, 404, "error.user.not.found"),

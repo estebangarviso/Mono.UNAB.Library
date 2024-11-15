@@ -2,16 +2,14 @@ package com.unab_library.core;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.*;
-import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
+
 
 public abstract class AbstractRepository<T> {
     protected ArrayList<T> items;
@@ -53,7 +52,7 @@ public abstract class AbstractRepository<T> {
                 try (BufferedReader reader = Files.newBufferedReader(transactionFile)) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        Transaction<T> transaction = gson.fromJson(line, Transaction.class);
+                        Transaction<T> transaction = gson.fromJson(line, new TypeToken<Transaction<T>>(){}.getType());
                         applyTransaction(loadedItems, transaction);
                     }
                 }
@@ -115,10 +114,11 @@ public abstract class AbstractRepository<T> {
      * Save a new item in the repository
      * @param item
      */
-    protected void save(T item) {
+    protected Result<T> save(T item) {
         Transaction<T> transaction = new Transaction<>(TransactionType.ADD, items.size(), item);
         items.add(item);
         appendTransaction(transaction);
+        return Result.<T>builder().setSuccess(true).setValue(item).build();
     }
     //#endregion
     //#region Read
@@ -126,7 +126,7 @@ public abstract class AbstractRepository<T> {
      * Get all items in the repository
      * @return
      */
-    protected List<T> getAll() {
+    public List<T> getAll() {
         return items;
     }
 
@@ -136,7 +136,7 @@ public abstract class AbstractRepository<T> {
      * @param end
      * @return
      */
-    protected List<T> getRange(int start, int end) {
+    public List<T> getRange(int start, int end) {
         return new ArrayList<>(items.subList(start, end));
     }
 

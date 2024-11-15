@@ -1,8 +1,8 @@
-package com.unab_library.core;
+package com.unab_library.modules.book_management;
 
-import java.util.Date;
 import com.unab_library.modules.books.Book;
 import com.unab_library.modules.users.User;
+import java.util.Date;
 
 public interface BookManagementInterface {
     /**
@@ -21,10 +21,10 @@ public interface BookManagementInterface {
     public User getValidUserByIdentityDocument(String identityDocument);
     
     /**
-     * Validates a return date.
+     * Validates the return date of a book loan.
      *
      * @param loanDate the loan date to compare with
      * @return the return date
      */
-    public Date getValidReturnDate(Date loanDate);
+    public void validateReturnDate(Date loanDate, Date returnDate);
 }

@@ -14,6 +14,12 @@ public class BadRequestException extends AppException {
     }
 
     // Books
+    public static BadRequestException invalidBookIsbn(String isbn) {
+        return new BadRequestException(AppExceptionCode.INVALID_BOOK_ISBN, new Throwable("Invalid book ISBN " + isbn));
+    }
+    public static BadRequestException invalidBookIsbn(String isbn, Throwable cause) {
+        return new BadRequestException(AppExceptionCode.INVALID_BOOK_ISBN, new Throwable("Invalid book ISBN " + isbn, cause));
+    }
     public static BadRequestException invalidBookCoverPath() {
         return new BadRequestException(AppExceptionCode.INVALID_BOOK_COVER, new Throwable("Invalid book cover path"));
     }
@@ -34,6 +40,14 @@ public class BadRequestException extends AppException {
 
     public static BadRequestException invalidRole() {
         return new BadRequestException(AppExceptionCode.INVALID_ROLE, new Throwable("Invalid role"));
+    }
+
+    public static BadRequestException invalidUserData(String message) {
+        return new BadRequestException(AppExceptionCode.INVALID_USER_DATA, new Throwable(message));
+    }
+
+    public static BadRequestException invalidIdentityDocument(String identityDocument) {
+        return new BadRequestException(AppExceptionCode.INVALID_IDENTITY_DOCUMENT, new Throwable("Invalid identity document " + identityDocument));
     }
 
     public static BadRequestException invalidReturnDate(String message) {

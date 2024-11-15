@@ -1,11 +1,11 @@
 package com.unab_library.modules.books;
 
-import java.util.Arrays;
-import java.util.List;
 import com.unab_library.common.exception.general.BadRequestException;
 import com.unab_library.common.exception.general.InternalServerErrorException;
 import com.unab_library.common.libs.MediaUtils;
 import com.unab_library.modules.books.Book.BookBuilder;
+import java.util.Arrays;
+import java.util.List;
 
 public class Book implements BookInterface {
     private Book() {}
@@ -14,11 +14,11 @@ public class Book implements BookInterface {
         return isbn;
     }
 
-    public String setIsbn(String isbn) {
+    public void setIsbn(String isbn) {
         if (bookRepository.existsByIsbn(isbn)) {
             throw BadRequestException.bookExists(isbn);
         }
-        return this.isbn;
+        this.isbn = isbn;
     }
 
     public String getTitle() {
@@ -39,10 +39,12 @@ public class Book implements BookInterface {
         return this.author;
     }
 
+    @Override
     public int getInventoryStock() {
         return inventoryStock;
     }
 
+    @Override
     public int setInventoryStock(int inventoryStock) {
         this.inventoryStock = inventoryStock;
         return this.inventoryStock;
@@ -52,6 +54,7 @@ public class Book implements BookInterface {
         return availableStock;
     }
 
+    @Override
     public int setAvailableStock(int availableStock) {
         this.availableStock = availableStock;
         return this.availableStock;
@@ -78,25 +81,24 @@ public class Book implements BookInterface {
     }
 
     //#region BookInterface implementation
-    public void decreaseInventoryStock() {
-        if (this.inventoryStock <= 0) {
-            throw BadRequestException.invalidInventoryStock("Inventory stock cannot be less than or equal to 0");
-        }
-        this.inventoryStock--;
-    }
+    @Override
     public void decreaseAvailableStock() {
         if (this.availableStock <= 0) {
             throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0");
         }
         this.availableStock--;
+        bookRepository.updateAvailableStock(getIsbn(), -1);
     }
 
+    @Override
     public void increaseAvailableStock() {
         if (this.availableStock >= this.inventoryStock) {
             throw BadRequestException.invalidAvailableStock("Available stock cannot exceed physical stock");
         }
         this.availableStock++;
+        bookRepository.updateAvailableStock(getIsbn(), 1);
     }
+    @Override
     public boolean isValidCover(String coverPath) {
         boolean isValid = coverPath != null && !coverPath.isEmpty();
         if (isValid) {
@@ -106,6 +108,7 @@ public class Book implements BookInterface {
         return isValid;
     }
 
+    @Override
     public Book validateStocks() {
         if (this.inventoryStock <= 0) {
             throw BadRequestException.invalidInventoryStock("Inventory stock cannot be less than or equal to 0");
@@ -117,6 +120,18 @@ public class Book implements BookInterface {
             throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0 or exceed inventory stock");
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Book[" +
+            "isbn='%s', " +
+            "title='%s', " +
+            "author='%s', " +
+            "inventoryStock=%d, " +
+            "availableStock=%d, " +
+            "coverPath='%s'" +
+            "]", getIsbn(), getTitle(), getAuthor(), getInventoryStock(), getAvailableStock(), getCoverPath());
     }
     //#endregion
 

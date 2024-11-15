@@ -1,11 +1,9 @@
 package com.unab_library.modules.users;
 
-import java.util.logging.Logger;
-import com.unab_library.common.exception.general.BadRequestException;
 import com.unab_library.common.enums.Gender;
+import com.unab_library.common.exception.general.BadRequestException;
 
 public class Student extends Person {
-    private static final Logger LOGGER = Logger.getLogger(Student.class.getName());
     private String currentCareer;
 
     public Student(String identityDocument, Gender gender, String fullName, String currentCareer) {
@@ -25,14 +23,17 @@ public class Student extends Person {
     }
 
     @Override
-    public void showData() {
-        super.showData();
-        String currentCareerString = String.format("Current career: %s", currentCareer);
-        LOGGER.info(currentCareerString);
+    public String toString() {
+        return String.format("Student[identityDocument='%s', gender='%s', fullName='%s', currentCareer='%s']",
+            getIdentityDocument(), getFullName(), getGender().getName(), getCurrentCareer());
+    }
+
+    public static StudentBuilder builder(Person person) {
+        return new StudentBuilder(person);
     }
 
     // Builder
-    public static class StudentBuilder {
+    protected static class StudentBuilder {
         private Person person;
         private String currentCareer;
 
@@ -48,15 +49,6 @@ public class Student extends Person {
         public Student build() {
             if (currentCareer == null) {
                 throw BadRequestException.currentCareerIsRequired();
-            }
-            if (person.getIdentityDocument() == null) {
-                throw BadRequestException.identityDocumentIsRequired();
-            }
-            if (person.getGender() == null) {
-                throw BadRequestException.genderIsRequired();
-            }
-            if (person.getFullName() == null) {
-                throw BadRequestException.fullNameIsRequired();
             }
             
             return new Student(person.getIdentityDocument(), person.getGender(), person.getFullName(), currentCareer);

@@ -20,9 +20,12 @@ public class AcademicDegree {
         return category;
     }
 
-    public void showData() {
-        String nameString = String.format("Name: %s", name);
-        LOGGER.info(nameString);
-        LOGGER.info("Category: " + category.getName());
+    @Override
+    public String toString() {
+        return String.format("AcademicDegree[" +
+            "name='%s', " +
+            "category='%s'" +
+            "]",
+            getName(), getCategory().getName());
     }
 }

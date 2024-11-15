@@ -1,37 +1,54 @@
 package com.unab_library.modules.users;
 
 import com.unab_library.common.enums.Gender;
-import java.util.logging.Logger;
+import com.unab_library.common.exception.general.BadRequestException;
+import com.unab_library.common.libs.ValidateUtils;
 
 public class Person {
-    private static final Logger LOGGER = Logger.getLogger(Person.class.getName());
     private String identityDocument;
     private Gender gender;
     private String fullName;
     
     public Person(String identityDocument, Gender gender, String fullName) {
-        this.identityDocument = identityDocument;
-        this.gender = gender;
-        this.fullName = fullName;
+        this.setIdentityDocument(identityDocument);
+        this.setGender(gender);
+        this.setFullName(fullName);
     }
 
     public String getFullName() {
         return fullName;
     }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     public String getIdentityDocument() {
         return identityDocument;
+    }
+
+    public void setIdentityDocument(String identityDocument) {
+        if(!ValidateUtils.isValidChileanIdentityDocument(identityDocument)) {
+            throw BadRequestException.invalidIdentityDocument(identityDocument);
+        }
+        this.identityDocument = identityDocument;
     }
 
     public Gender getGender() {
         return gender;
     }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
     
-    public void showData() {
-        String identityDocumentString = String.format("Identity document: %s", identityDocument);
-        String fullNameString = String.format("Full name: %s", fullName);
-        LOGGER.info(identityDocumentString);
-        LOGGER.info("Gender: " + gender.getName());
-        LOGGER.info(fullNameString);
+    @Override
+    public String toString() {
+        return String.format("Person[" +
+            "identityDocument='%s', " +
+            "fullName='%s', " +
+            "gender='%s'" +
+            "]",
+            getIdentityDocument(), getFullName(), getGender().getName());
     }
 }

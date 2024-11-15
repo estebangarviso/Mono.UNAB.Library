@@ -1,18 +1,21 @@
-package com.unab_library.core;
-
-import java.util.Date;
+package com.unab_library.modules.book_management;
 
 import com.unab_library.common.exception.general.BadRequestException;
 import com.unab_library.common.exception.general.NotFoundException;
 import com.unab_library.common.exception.general.UnauthorizedException;
+import com.unab_library.core.AbstractRepository;
 import com.unab_library.modules.books.Book;
 import com.unab_library.modules.books.BookRepository;
 import com.unab_library.modules.users.Role;
 import com.unab_library.modules.users.User;
 import com.unab_library.modules.users.UserRepository;
+import java.util.Date;
+
+
 
 public class BookManagement implements BookManagementInterface {
 
+    @Override
     public Book getExistingBook(String isbn) {
         // get the book with the provided ISBN
         boolean checkBookExists = bookRepository.existsByIsbn(isbn);
@@ -23,6 +26,7 @@ public class BookManagement implements BookManagementInterface {
         return result.getValue();
     }
 
+    @Override
     public User getValidUserByIdentityDocument(String identityDocument) {
         // check if the user exists
         boolean checkUserExists = userRepository.existsByIdentityDocument(identityDocument);
@@ -39,7 +43,8 @@ public class BookManagement implements BookManagementInterface {
         return userReturned;
     }
 
-    public Date getValidReturnDate(Date loanDate) {
+    @Override
+    public void validateReturnDate(Date loanDate, Date returnDate) {
         if (returnDate.before(loanDate)) {
             throw BadRequestException.invalidReturnDate("Return date must be after the loan date");
         }
@@ -58,37 +63,39 @@ public class BookManagement implements BookManagementInterface {
         if (returnDate.after(maxReturnDate)) {
             throw BadRequestException.invalidReturnDate("Return date must be before " + maxReturnDate);
         }
-
-        return returnDate;
     }
 
     public Book getBook() {
         return book;
     }
 
-    private void setBookByIsbn(String isbn) {
-        Book existingBook = getExistingBook(isbn);
-        // check if the book is available
-        if (existingBook.getAvailableStock() == 0) {
-            throw BadRequestException.bookNotAvailable();
+    protected void setBookByIsbn(String isbn) {
+        try {
+            Book existingBook = getExistingBook(isbn);
+            // check if the book is available
+            if (existingBook.getAvailableStock() == 0) {
+                throw BadRequestException.bookNotAvailable();
+            }
+            this.book = existingBook;
+        } catch (Throwable e) {
+            throw BadRequestException.invalidBookIsbn(isbn, e);
         }
-        this.book = existingBook;
-    }
-
-    public Book getBook() {
-        return book;
     }
 
     public User getUser() {
         return user;
     }
 
-    private void setUserByIdentityDocument(String identityDocument) {
+    protected void setUserByIdentityDocument(String identityDocument) {
         this.user = getValidUserByIdentityDocument(identityDocument);
     }
 
     public Date getReturnDate() {
         return returnDate;
+    }
+
+    public void setReturnDate(Date returnDate) {
+        this.returnDate = returnDate;
     }
 
     private static final BookRepository bookRepository = BookRepository.getInstance();
