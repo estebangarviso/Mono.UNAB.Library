@@ -1,16 +1,13 @@
 package com.unab_library.modules.users;
 
 import com.unab_library.common.exception.general.BadRequestException;
+import com.unab_library.core.AbstractRepository.Result;
 import com.unab_library.modules.book_management.book_loans.BookLoan;
+import com.unab_library.modules.book_management.book_loans.BookLoanRepository;
 import java.util.List;
 
 
 public class User implements UserInterface {
-    private Role role;
-    private String career;
-    private Person person;
-    private BookLoan loan;
-
     /**
      * Constructor for students
      * @param person
@@ -69,7 +66,7 @@ public class User implements UserInterface {
 
     @Override
     public boolean hasActiveLoan() {
-        return loan != null;
+        return idLoan != null;
     }
 
     public Role getRole() {
@@ -85,15 +82,19 @@ public class User implements UserInterface {
     }
 
     public BookLoan getLoan() {
-        return loan;
+        return bookLoanRepository.getById(idLoan).getValue();
     }
 
-    private void setLoan(BookLoan loan) {
-        this.loan = loan;
+    public void setIdLoan(String idLoan) {
+        this.idLoan = idLoan;
     }
 
     public void releaseLoan() {
-        setLoan(null);
+        userRepository.updateLoan(this, null);
+    }
+
+    public void attachLoan(String idLoan) {
+        userRepository.updateLoan(this, idLoan);
     }
 
     @Override
@@ -103,12 +104,27 @@ public class User implements UserInterface {
             "career='%s', " +
             "person='%s', " +
             "loan=%s" +
-            "]", getRole().getName(), getCareer(), getPerson().toString(), hasActiveLoan() ? loan.toString() : "null");
+            "]", getRole().getName(), getCareer(), getPerson().toString(), hasActiveLoan() ? getLoan().toString() : "null");
+    }
+
+    public static Result<User> createStudent(UserStudentSaveDTO userStudentSaveDTO) {
+        return userRepository.save(userStudentSaveDTO);
+    }
+
+    public static Result<User> createTeacher(UserTeacherSaveDTO userTeacherSaveDTO) {
+        return userRepository.save(userTeacherSaveDTO);
     }
 
     public static UserBuilder builder(Role role, Person person) {
         return new UserBuilder(role, person);
     }
+
+    private static final UserRepository userRepository = UserRepository.getInstance();
+    private static final BookLoanRepository bookLoanRepository = BookLoanRepository.getInstance();
+    private Role role;
+    private String career;
+    private Person person;
+    private String idLoan;
 
     // Builder
     public static class UserBuilder {

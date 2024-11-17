@@ -1,11 +1,10 @@
 package com.unab_library.core;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.*;
 import java.lang.reflect.ParameterizedType;
@@ -43,16 +42,16 @@ public abstract class AbstractRepository<T> {
     private ArrayList<T> loadItemsWithTransactions() {
         lock.readLock().lock();
         try {
-            // Load base file
             ArrayList<T> loadedItems = loadBaseItems();
             
-            // Apply transactions
             Path transactionFile = Paths.get(fileName + TRANSACTION_SUFFIX);
             if (Files.exists(transactionFile)) {
                 try (BufferedReader reader = Files.newBufferedReader(transactionFile)) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        Transaction<T> transaction = gson.fromJson(line, new TypeToken<Transaction<T>>(){}.getType());
+                        Type transactionType = TypeToken.getParameterized(Transaction.class, 
+                            ((ParameterizedType) typeToken).getActualTypeArguments()[0]).getType();
+                        Transaction<T> transaction = gson.fromJson(line, transactionType);
                         applyTransaction(loadedItems, transaction);
                     }
                 }
@@ -223,10 +222,15 @@ public abstract class AbstractRepository<T> {
      * @param index
      * @param item
      */
-    protected void update(int index, T item) {
+    protected Result<T> update(int index, T item) {
         Transaction<T> transaction = new Transaction<>(TransactionType.UPDATE, index, item);
         items.set(index, item);
         appendTransaction(transaction);
+        return Result.<T>builder()
+            .setIndex(index)
+            .setSuccess(true)
+            .setValue(item)
+            .build();
     }
     //#endregion
 
@@ -237,32 +241,30 @@ public abstract class AbstractRepository<T> {
     private static class Transaction<T> {
         TransactionType type;
         int index;
-        JsonElement itemJson;  // Changed from T to JsonElement
-        transient T item;      // Transient field for deserialized item
+        T item;
 
         Transaction(TransactionType type, int index, T item) {
             this.type = type;
             this.index = index;
             this.item = item;
-            this.itemJson = item != null ? new Gson().toJsonTree(item) : null;
         }
     }
 
-    private class TransactionAdapter<T> extends TypeAdapter<Transaction<T>> {
-        private final TypeToken<ArrayList<T>> typeToken;
+    private class TransactionAdapter<E> extends TypeAdapter<Transaction<E>> {
+        private final Type elementType;
 
-        TransactionAdapter(TypeToken<ArrayList<T>> typeToken) {
-            this.typeToken = typeToken;
+        TransactionAdapter(TypeToken<ArrayList<E>> typeToken) {
+            this.elementType = ((ParameterizedType) typeToken.getType()).getActualTypeArguments()[0];
         }
 
         @Override
-        public void write(JsonWriter out, Transaction<T> transaction) throws IOException {
+        public void write(JsonWriter out, Transaction<E> transaction) throws IOException {
             out.beginObject();
             out.name("type").value(transaction.type.name());
             out.name("index").value(transaction.index);
-            out.name("itemJson");
-            if (transaction.itemJson != null) {
-                gson.toJson(transaction.itemJson, out);
+            out.name("item");
+            if (transaction.item != null) {
+                gson.toJson(transaction.item, elementType, out);
             } else {
                 out.nullValue();
             }
@@ -270,22 +272,27 @@ public abstract class AbstractRepository<T> {
         }
 
         @Override
-        public Transaction<T> read(JsonReader in) throws IOException {
+        public Transaction<E> read(JsonReader in) throws IOException {
             in.beginObject();
             TransactionType type = null;
             int index = -1;
-            JsonElement itemJson = null;
+            E item = null;
 
             while (in.hasNext()) {
-                switch (in.nextName()) {
+                String name = in.nextName();
+                switch (name) {
                     case "type":
                         type = TransactionType.valueOf(in.nextString());
                         break;
                     case "index":
                         index = in.nextInt();
                         break;
-                    case "itemJson":
-                        itemJson = JsonParser.parseReader(in);
+                    case "item":
+                        if (in.peek() != JsonToken.NULL) {
+                            item = gson.fromJson(in, elementType);
+                        } else {
+                            in.nextNull();
+                        }
                         break;
                     default:
                         in.skipValue();
@@ -293,13 +300,7 @@ public abstract class AbstractRepository<T> {
             }
             in.endObject();
 
-            Transaction<T> transaction = new Transaction<>(type, index, null);
-            transaction.itemJson = itemJson;
-            if (itemJson != null) {
-                Type itemType = ((ParameterizedType) typeToken.getType()).getActualTypeArguments()[0];
-                transaction.item = gson.fromJson(itemJson, itemType);
-            }
-            return transaction;
+            return new Transaction<>(type, index, item);
         }
     }
 

@@ -24,10 +24,14 @@ public class BookReturnRepository extends AbstractRepository<BookReturn> {
     public Result<BookReturn> save(BookReturnSaveDTO returnSaveDTO) {
         // build return
         BookReturn newReturn = BookReturn.builder()
-            .setBookByIsbn(returnSaveDTO.isbn())
-            .setUserByIdentityDocument(returnSaveDTO.identityDocument())
+            .setIdentityDocument(returnSaveDTO.identityDocument())
+            .setIsbn(returnSaveDTO.isbn())
             .build();
         // save the return
         return super.save(newReturn);
+    }
+
+    public Result<BookReturn> getById(String id) {
+        return getByProperty(BookReturn::getId, id);
     }
 }

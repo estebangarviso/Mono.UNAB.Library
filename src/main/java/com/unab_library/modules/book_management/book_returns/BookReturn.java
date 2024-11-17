@@ -1,14 +1,12 @@
 package com.unab_library.modules.book_management.book_returns;
 
 import com.unab_library.common.exception.general.BadRequestException;
+import com.unab_library.core.AbstractRepository.Result;
 import com.unab_library.modules.book_management.BookManagement;
 import com.unab_library.modules.book_management.book_loans.BookLoan;
 import com.unab_library.modules.books.Book;
 import com.unab_library.modules.users.User;
 import java.util.Date;
-
-
-
 
 public class BookReturn extends BookManagement implements BookReturnInterface {
     private BookReturn() {
@@ -37,12 +35,21 @@ public class BookReturn extends BookManagement implements BookReturnInterface {
         return loanedBook.getIsbn().equals(getBook().getIsbn());
     }
 
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+
     public static BookReturnBuilder builder() {
         return new BookReturnBuilder();
     }
 
+    public static Result<BookReturn> createBookReturn(BookReturnSaveDTO bookReturnSaveDTO) {
+        return bookReturnRepository.save(bookReturnSaveDTO);
+    }
+
     private static final int FINE_PER_DAY = 1000;
-    private final BookReturnRepository bookReturnRepository = BookReturnRepository.getInstance();
+    private static final BookReturnRepository bookReturnRepository = BookReturnRepository.getInstance();
     private BookLoan bookLoan;
 
     public static class BookReturnBuilder {
@@ -52,9 +59,9 @@ public class BookReturn extends BookManagement implements BookReturnInterface {
             this.bookReturn = new BookReturn();
         }
 
-        public BookReturnBuilder setBookByIsbn(String isbn) {
+        public BookReturnBuilder setIsbn(String isbn) {
             // check if the book exists
-            this.bookReturn.setBookByIsbn(isbn);
+            this.bookReturn.setIsbn(isbn);
             // check if the book is the one that the user has loaned
             if (!this.bookReturn.validateUserBookReturn()) {
                 throw BadRequestException.bookReturnBookMismatch();
@@ -62,8 +69,8 @@ public class BookReturn extends BookManagement implements BookReturnInterface {
             return this;
         }
 
-        public BookReturnBuilder setUserByIdentityDocument(String identityDocument) {
-            this.bookReturn.setUserByIdentityDocument(identityDocument);
+        public BookReturnBuilder setIdentityDocument(String identityDocument) {
+            this.bookReturn.setIdentityDocument(identityDocument);
             return this;
         }
 
@@ -72,6 +79,8 @@ public class BookReturn extends BookManagement implements BookReturnInterface {
             this.bookReturn.getUser().releaseLoan();
             // increase available stock of the book
             this.bookReturn.getBook().increaseAvailableStock();
+            // set id
+            this.bookReturn.setId();
             return this.bookReturn;
         }
     }

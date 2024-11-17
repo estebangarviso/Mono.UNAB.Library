@@ -3,6 +3,7 @@ package com.unab_library.modules.book_management.book_loans;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.unab_library.common.libs.MediaUtils;
+import com.unab_library.core.AbstractRepository.Result;
 import com.unab_library.modules.book_management.BookManagement;
 import com.unab_library.modules.books.Book;
 import com.unab_library.modules.users.Person;
@@ -85,6 +86,11 @@ public class BookLoan extends BookManagement {
     }
 
     @Override
+    public String getId() {
+        return super.getId();
+    }
+
+    @Override
     public String toString() {
         return String.format("BookLoan[" +
             "book=%s, " +
@@ -98,6 +104,11 @@ public class BookLoan extends BookManagement {
         return new LoanBuilder();
     }
 
+    public static Result<BookLoan> createLoan(BookLoanSaveDTO bookLoanSaveDTO) {
+        return bookLoanRepository.save(bookLoanSaveDTO);
+    }
+
+    private static final BookLoanRepository bookLoanRepository = BookLoanRepository.getInstance();
     private Date loanDate;
 
     public static class LoanBuilder {
@@ -105,13 +116,13 @@ public class BookLoan extends BookManagement {
             bookLoan = new BookLoan();
         }
 
-        public LoanBuilder setBookByIsbn(String isbn) {
-            bookLoan.setBookByIsbn(isbn);
+        public LoanBuilder setIsbn(String isbn) {
+            bookLoan.setIsbn(isbn);
             return this;
         }
 
-        public LoanBuilder setUserByIdentityDocument(String identityDocument) {
-            bookLoan.setUserByIdentityDocument(identityDocument);
+        public LoanBuilder setIdentityDocument(String identityDocument) {
+            bookLoan.setIdentityDocument(identityDocument);
             return this;
         }
 
@@ -121,6 +132,7 @@ public class BookLoan extends BookManagement {
         }
 
         public BookLoan build() {
+            bookLoan.setId();
             return bookLoan;
         }
 

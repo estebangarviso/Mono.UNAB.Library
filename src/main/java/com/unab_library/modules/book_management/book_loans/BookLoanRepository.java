@@ -24,13 +24,19 @@ public class BookLoanRepository extends AbstractRepository<BookLoan> {
     public Result<BookLoan> save(BookLoanSaveDTO loanSaveDTO) {
         // build loan
         BookLoan newLoan = BookLoan.builder()
-            .setBookByIsbn(loanSaveDTO.isbn())
-            .setUserByIdentityDocument(loanSaveDTO.identityDocument())
+            .setIsbn(loanSaveDTO.isbn())
+            .setIdentityDocument(loanSaveDTO.identityDocument())
             .setReturnDate(loanSaveDTO.returnDate())
             .build();
         // stock business logic
         newLoan.getBook().decreaseAvailableStock();
+        // attach the loan to the user
+        newLoan.getUser().attachLoan(newLoan.getId());
         // save the loan
         return super.save(newLoan);
+    }
+
+    public Result<BookLoan> getById(String idBookLoan) {
+        return getByProperty(BookLoan::getId, idBookLoan);
     }
 }

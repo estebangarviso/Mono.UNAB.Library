@@ -1,11 +1,6 @@
 {
-    "java.project.sourcePaths": [
-        "bkp/AppVivienda_v2/src/app_vivienda",
-        "src/main/java/com/unab_library"
-    ],
-    "java.debug.settings.onBuildFailureProceed": true,
-    "java.configuration.updateBuildConfiguration": "automatic",
     "cSpell.words": [
         "isbn"
-    ]
+    ],
+    "java.debug.settings.onBuildFailureProceed": true
 }

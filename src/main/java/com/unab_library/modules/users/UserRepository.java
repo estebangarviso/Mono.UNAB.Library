@@ -63,4 +63,23 @@ public class UserRepository extends AbstractRepository<User> {
 
         return this.save(newUser);
     }
+
+    /**
+     * Updates an user.
+     * 
+     * @param User the user to update
+     * @param loan the id of the loan to update
+     */
+    public Result<User> updateLoan(User user, String idLoan) {
+        Result<User> result = this.getByIdentityDocument(user.getIdentityDocument());
+        if (!result.isSuccess()) {
+            return result;
+        }
+
+        int index = result.getIndex();
+        User userToUpdate = result.getValue();
+        userToUpdate.setIdLoan(idLoan);
+
+        return this.update(index, userToUpdate);
+    }
 }

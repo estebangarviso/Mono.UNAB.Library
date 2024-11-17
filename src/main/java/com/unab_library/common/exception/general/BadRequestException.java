@@ -89,4 +89,8 @@ public class BadRequestException extends AppException {
     public static BadRequestException fullNameIsRequired() {
         return new BadRequestException(AppExceptionCode.FULL_NAME_IS_REQUIRED, new Throwable("Full name is required."));
     }
+
+    public static BadRequestException userNotSet() {
+        return new BadRequestException(AppExceptionCode.USER_NOT_SET, new Throwable("User is not set"));
+    }
 }

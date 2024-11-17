@@ -3,9 +3,10 @@ package com.unab_library.modules.books;
 import com.unab_library.common.exception.general.BadRequestException;
 import com.unab_library.common.exception.general.InternalServerErrorException;
 import com.unab_library.common.libs.MediaUtils;
-import com.unab_library.modules.books.Book.BookBuilder;
+import com.unab_library.core.AbstractRepository.Result;
 import java.util.Arrays;
 import java.util.List;
+
 
 public class Book implements BookInterface {
     private Book() {}
@@ -80,6 +81,10 @@ public class Book implements BookInterface {
         }
     }
 
+    public static Result<Book> createBook(BookSaveDTO bookSaveDTO) {
+        return bookRepository.save(bookSaveDTO);
+    }
+
     //#region BookInterface implementation
     @Override
     public void decreaseAvailableStock() {
@@ -87,7 +92,7 @@ public class Book implements BookInterface {
             throw BadRequestException.invalidAvailableStock("Available stock cannot be less than 0");
         }
         this.availableStock--;
-        bookRepository.updateAvailableStock(getIsbn(), -1);
+        bookRepository.updateAvailableStock(getIsbn(), this.availableStock);
     }
 
     @Override
@@ -96,7 +101,7 @@ public class Book implements BookInterface {
             throw BadRequestException.invalidAvailableStock("Available stock cannot exceed physical stock");
         }
         this.availableStock++;
-        bookRepository.updateAvailableStock(getIsbn(), 1);
+        bookRepository.updateAvailableStock(getIsbn(), this.availableStock);
     }
     @Override
     public boolean isValidCover(String coverPath) {

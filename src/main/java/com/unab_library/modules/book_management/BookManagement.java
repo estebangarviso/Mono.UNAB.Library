@@ -10,8 +10,7 @@ import com.unab_library.modules.users.Role;
 import com.unab_library.modules.users.User;
 import com.unab_library.modules.users.UserRepository;
 import java.util.Date;
-
-
+import java.util.UUID;
 
 public class BookManagement implements BookManagementInterface {
 
@@ -48,7 +47,7 @@ public class BookManagement implements BookManagementInterface {
         if (returnDate.before(loanDate)) {
             throw BadRequestException.invalidReturnDate("Return date must be after the loan date");
         }
-        
+        User user = getUser();
         // Max return days are 10 days after the loan date for students
         int maxReturnDays = 10;
         // sum days to the loan date
@@ -65,29 +64,28 @@ public class BookManagement implements BookManagementInterface {
         }
     }
 
-    public Book getBook() {
-        return book;
+    protected String getId() {
+        return id;
     }
 
-    protected void setBookByIsbn(String isbn) {
-        try {
-            Book existingBook = getExistingBook(isbn);
-            // check if the book is available
-            if (existingBook.getAvailableStock() == 0) {
-                throw BadRequestException.bookNotAvailable();
-            }
-            this.book = existingBook;
-        } catch (Throwable e) {
-            throw BadRequestException.invalidBookIsbn(isbn, e);
-        }
+    protected void setId() {
+        this.id = UUID.randomUUID().toString();
+    }
+
+    public Book getBook() {
+        return bookRepository.getByIsbn(isbn).getValue();
+    }
+
+    protected void setIsbn(String isbn) {
+        this.isbn = isbn;
     }
 
     public User getUser() {
-        return user;
+        return userRepository.getByIdentityDocument(identityDocument).getValue();
     }
 
-    protected void setUserByIdentityDocument(String identityDocument) {
-        this.user = getValidUserByIdentityDocument(identityDocument);
+    protected void setIdentityDocument(String identityDocument) {
+        this.identityDocument = identityDocument;
     }
 
     public Date getReturnDate() {
@@ -100,7 +98,8 @@ public class BookManagement implements BookManagementInterface {
 
     private static final BookRepository bookRepository = BookRepository.getInstance();
     private static final UserRepository userRepository = UserRepository.getInstance();
-    private Book book;
-    private User user;
+    private String id;
+    private String isbn;
+    private String identityDocument;
     private Date returnDate;
 }

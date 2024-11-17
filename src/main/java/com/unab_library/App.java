@@ -7,16 +7,13 @@ import com.unab_library.modules.book_management.book_loans.BookLoan;
 import com.unab_library.modules.book_management.book_loans.BookLoanRepository;
 import com.unab_library.modules.book_management.book_loans.BookLoanSaveDTO;
 import com.unab_library.modules.book_management.book_returns.BookReturn;
-import com.unab_library.modules.book_management.book_returns.BookReturnRepository;
 import com.unab_library.modules.book_management.book_returns.BookReturnSaveDTO;
 import com.unab_library.modules.books.Book;
-import com.unab_library.modules.books.BookRepository;
 import com.unab_library.modules.books.BookSaveDTO;
 import com.unab_library.modules.users.AcademicDegree;
 import com.unab_library.modules.users.AcademicDegreeCategory;
 import com.unab_library.modules.users.Person;
 import com.unab_library.modules.users.User;
-import com.unab_library.modules.users.UserRepository;
 import com.unab_library.modules.users.UserStudentSaveDTO;
 import com.unab_library.modules.users.UserTeacherSaveDTO;
 import java.io.FileOutputStream;
@@ -28,23 +25,26 @@ import org.apache.logging.log4j.Logger;
 
 
 public class App {
-    private static final BookRepository bookRepository = BookRepository.getInstance();
-    private static final UserRepository userRepository = UserRepository.getInstance();
     private static final BookLoanRepository bookLoanRepository = BookLoanRepository.getInstance();
-    private static final BookReturnRepository bookReturnRepository = BookReturnRepository.getInstance();
     private static final String BOOK_ISBN = "978-3-16-148410-0";
     private static final Logger logger = LoggerFactory.getLogger(App.class);
     
     public static void main(String[] args) {
         // Ask the user to run the creation of the entities or return all books
-        logger.info("Do you want to run the creation of the entities or return all books? (creation/return)");
+        logger.info("Do you want to run the creation of the entities or return all books? (loan/return/cleanup)");
         String option = System.console().readLine();
-        if (option.equals("creation")) {
-            runCreation();
-        } else if (option.equals("return")) {
-            returnAllBooks();
-        } else {
-            logger.error("Invalid option");
+        switch (option) {
+            case "loan":
+                runCreation();
+                break;
+            case "return":
+                returnAllBooks();
+                break;
+            case "cleanup":
+                cleanup();
+                break;
+            default:
+                logger.error("Invalid option");
         }
     }
 
@@ -68,12 +68,28 @@ public class App {
         List<BookLoan> bookLoans = bookLoanRepository.getAll();
         for (BookLoan loan : bookLoans) {
             BookReturnSaveDTO newReturn = new BookReturnSaveDTO(loan.getBook().getIsbn(), loan.getUser().getPerson().getIdentityDocument());
-            Result<BookReturn> result = bookReturnRepository.save(newReturn);
+            Result<BookReturn> result = BookReturn.createBookReturn(newReturn);
             if (result.isSuccess()) {
                 logger.info("Book returned successfully\n" + result.getValue().toString());
             } else {
                 logger.error("An error occurred while returning the book");
             }
+        }
+    }
+
+    public static void cleanup() {
+        // Delete all files files in /data folder
+        logger.info("Cleaning up data folder");
+        try {
+            ProcessBuilder pb = new ProcessBuilder("rm", "-rf", "data");
+            pb.start();
+            logger.info("Data folder cleaned up");
+            // mkdir data folder
+            ProcessBuilder pb2 = new ProcessBuilder("mkdir", "data");
+            pb2.start();
+            logger.info("Data folder recreated");
+        } catch (IOException e) {
+            logger.error("An error occurred while cleaning up the data folder", e);
         }
     }
 
@@ -83,7 +99,7 @@ public class App {
             "The Lord of the Rings - The Fellowship of the Ring",
             "J.R.R. Tolkien",
             10, 10, "images/lotr1.jpg");
-        Result<Book> result = bookRepository.save(newBook);
+        Result<Book> result = Book.createBook(newBook);
         if (result.isSuccess()) {
             logger.info("Book created successfully\n" + result.getValue().toString());
         } else {
@@ -98,7 +114,7 @@ public class App {
             "Civil Engineering Information Technology"
         );
 
-        Result<User> result = userRepository.save(newUser);
+        Result<User> result = User.createStudent(newUser);
         if (result.isSuccess()) {
             logger.info("Student created successfully\n" + result.getValue().toString());
         } else {
@@ -117,7 +133,7 @@ public class App {
             )
         );
 
-        Result<User> result = userRepository.save(newTeacher);
+        Result<User> result = User.createTeacher(newTeacher);
         if (result.isSuccess()) {
             logger.info("Teacher created successfully\n" + result.getValue().toString());
         } else {
@@ -133,7 +149,7 @@ public class App {
         calendar.add(Calendar.DATE, loanDays);
         Date returnDate = calendar.getTime();
         BookLoanSaveDTO bookLoan = new BookLoanSaveDTO(BOOK_ISBN, "18380815-K", returnDate);
-        Result<BookLoan> result = bookLoanRepository.save(bookLoan);
+        Result<BookLoan> result = BookLoan.createLoan(bookLoan);
         if (result.isSuccess()) {
             logger.info("Book borrowed to student successfully\n" + result.getValue().toString());
         } else {

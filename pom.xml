@@ -91,7 +91,6 @@
               <source>22</source>
               <target>22</target>
               <compilerVersion>1.8</compilerVersion>
-              <compilerArgs>--enable-preview</compilerArgs>
           </configuration>
         </plugin>
         <plugin>

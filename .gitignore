@@ -51,3 +51,6 @@ nbdist/
 # MacOS
 .DS_Store
 **/.DS_Store
+
+# Receipts
+!src/main/resources/receipts/.gitkeep

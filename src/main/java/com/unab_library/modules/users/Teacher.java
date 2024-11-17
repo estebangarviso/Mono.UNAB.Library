@@ -61,22 +61,22 @@ public class Teacher extends Person {
         }
 
         public TeacherBuilder setProfession(String profession) {
-            if (profession == null) {
-                throw BadRequestException.invalidUserData("Profession is required");
-            }
             this.profession = profession;
             return this;
         }
 
         public TeacherBuilder setAcademicDegrees(List<AcademicDegree> academicDegrees) {
-            if (academicDegrees == null || academicDegrees.isEmpty()) {
-                throw BadRequestException.invalidUserData("Academic degrees are required");
-            }
             this.academicDegrees = academicDegrees;
             return this;
         }
 
         public Teacher build() {
+            if (profession == null) {
+                throw BadRequestException.invalidUserData("Profession is required");
+            }
+            if (academicDegrees == null || academicDegrees.isEmpty()) {
+                throw BadRequestException.invalidUserData("Academic degrees are required");
+            }
             return new Teacher(person.getIdentityDocument(), person.getGender(), person.getFullName(), profession, academicDegrees);
         }
     }

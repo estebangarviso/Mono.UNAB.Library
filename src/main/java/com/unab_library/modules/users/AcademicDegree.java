@@ -1,9 +1,5 @@
 package com.unab_library.modules.users;
-
-import java.util.logging.Logger;
-
 public class AcademicDegree {
-    private static final Logger LOGGER = Logger.getLogger(AcademicDegree.class.getName());
     private String name;
     private AcademicDegreeCategory category;
 
