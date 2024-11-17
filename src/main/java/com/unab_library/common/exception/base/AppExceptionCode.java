@@ -22,6 +22,7 @@ public enum AppExceptionCode {
     INVALID_BOOK_ISBN(1017, 400, "error.invalid.book.isbn"),
     INVALID_IDENTITY_DOCUMENT(1018, 400, "error.invalid.identity.document"),
     USER_NOT_SET(1019, 400, "error.user.not.set"),
+    IS_REQUIRED(1020, 400, "error.is.required"),
     // Not Found
     BOOK_NOT_FOUND(2001, 404, "error.book.not.found"),
     USER_NOT_FOUND(2002, 404, "error.user.not.found"),

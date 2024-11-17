@@ -53,4 +53,4 @@ nbdist/
 **/.DS_Store
 
 # Receipts
-!src/main/resources/receipts/.gitkeep
+src/main/resources/receipts/*.pdf

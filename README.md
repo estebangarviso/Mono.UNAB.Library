@@ -32,13 +32,17 @@ _**Nota**: Este proyecto es parte de un proyecto académico y no está destinado
     mvn clean package
     ```
 4. Corre la aplicación:
-    ```bash
-    java -jar target/Mono.UNAB.Library-1.0-SNAPSHOT.jar
-    ```
+    Dirigirse al archivo `src/main/java/com/unab_library/App.java` y correr el método main de la clase para probar la aplicación:
+
+    | Método    | Descripción                                                                                                                                                                                                                            |
+    | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `loan`    | Registra un estudiante (student), un profesor (teacher), un libro (book), le asigna un préstamo (book loan) a cada persona y guarda los tickets de préstamo (loan receipt) en formato pdf en la carpeta `src/main/resources/receipts`. |
+    | `return`  | Registra la devolución de un libro (book) prestado a un estudiante (student) y profesor (teacher).                                                                                                                                     |
+    | `cleanup` | Elimina todos los datos de la aplicación.                                                                                                                                                                                              |
 
 ### Uso
 
-Para utilizar el repositorio de persistencia de datos, crea una instancia de la clase correspondiente y llama a los métodos necesarios para leer o escribir datos.
+Para utilizar el repositorio de persistencia de datos, crea una instancia de la clase correspondiente y llama a los métodos necesarios para leer o escribir datos. Estos son utilizados en sus servicios correspondientes para hacer funcional modularmente la aplicación a través de un controlador universal en la clase `App`.
 
 ## FAQ
 

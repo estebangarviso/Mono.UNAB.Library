@@ -93,4 +93,8 @@ public class BadRequestException extends AppException {
     public static BadRequestException userNotSet() {
         return new BadRequestException(AppExceptionCode.USER_NOT_SET, new Throwable("User is not set"));
     }
+
+    public static BadRequestException isRequired(String message) {
+        return new BadRequestException(AppExceptionCode.IS_REQUIRED, new Throwable(message));
+    }
 }

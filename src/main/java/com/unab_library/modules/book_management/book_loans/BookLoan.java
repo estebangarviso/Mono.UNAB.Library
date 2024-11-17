@@ -2,17 +2,22 @@ package com.unab_library.modules.book_management.book_loans;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import com.unab_library.common.exception.general.BadRequestException;
+import com.unab_library.common.exception.general.UnauthorizedException;
 import com.unab_library.common.libs.MediaUtils;
 import com.unab_library.core.AbstractRepository.Result;
 import com.unab_library.modules.book_management.BookManagement;
 import com.unab_library.modules.books.Book;
 import com.unab_library.modules.users.Person;
+import com.unab_library.modules.users.Role;
+import com.unab_library.modules.users.User;
 import java.io.ByteArrayOutputStream;
 import java.util.Calendar;
 import java.util.Date;
 
 
-public class BookLoan extends BookManagement {
+
+public class BookLoan extends BookManagement implements BookLoanInterface {
     private BookLoan() {
         // This constructor is private to prevent the creation of a Loan object without
         this.loanDate = new Date();
@@ -47,6 +52,28 @@ public class BookLoan extends BookManagement {
 
         return String.format("%02d-%02d-%d", calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1,
                 calendar.get(Calendar.YEAR));
+    }
+
+    @Override
+    public void validateReturnDate(Date loanDate, Date returnDate) {
+        if (returnDate.before(loanDate)) {
+            throw BadRequestException.invalidReturnDate("Return date must be after the loan date");
+        }
+        User user = getUser();
+        // Max return days are 10 days after the loan date for students
+        int maxReturnDays = 10;
+        // sum days to the loan date
+        if (user.getRole().equals(Role.TEACHER)) {
+            // Max return days are 20 days after the loan date
+            maxReturnDays = 20;
+        } else if (!user.getRole().equals(Role.STUDENT)) {
+            throw UnauthorizedException.unauthorized();
+        }
+
+        Date maxReturnDate = new Date(loanDate.getTime() + (maxReturnDays * 24 * 60 * 60 * 1000));
+        if (returnDate.after(maxReturnDate)) {
+            throw BadRequestException.invalidReturnDate("Return date must be before " + maxReturnDate);
+        }
     }
 
     public byte[] generateReceipt() {

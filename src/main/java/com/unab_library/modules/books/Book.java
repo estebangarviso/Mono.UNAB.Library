@@ -191,6 +191,18 @@ public class Book implements BookInterface {
         }
 
         public Book build() {
+            if (this.book.getIsbn() == null) {
+                throw BadRequestException.isRequired("ISBN is required");
+            }
+            if (this.book.getTitle() == null) {
+                throw BadRequestException.isRequired("Title is required");
+            }
+            if (this.book.getAuthor() == null) {
+                throw BadRequestException.isRequired("Author is required");
+            }
+            if (this.book.getCoverPath() == null) {
+                throw BadRequestException.invalidBookCoverPath();
+            }
             return this.book.validateStocks();
         }
     }
