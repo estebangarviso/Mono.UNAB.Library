@@ -1,6 +1,5 @@
 package com.unab_library.modules.users;
 
-import com.unab_library.common.enums.Gender;
 import com.unab_library.common.exception.general.BadRequestException;
 
 public class Student extends Person {

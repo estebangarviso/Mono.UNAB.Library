@@ -1,10 +1,8 @@
 package com.unab_library;
 
-import com.unab_library.common.enums.Gender;
 import com.unab_library.common.libs.LoggerFactory;
 import com.unab_library.core.AbstractRepository.Result;
 import com.unab_library.modules.book_management.book_loans.BookLoan;
-import com.unab_library.modules.book_management.book_loans.BookLoanRepository;
 import com.unab_library.modules.book_management.book_loans.BookLoanSaveDTO;
 import com.unab_library.modules.book_management.book_returns.BookReturn;
 import com.unab_library.modules.book_management.book_returns.BookReturnSaveDTO;
@@ -12,6 +10,7 @@ import com.unab_library.modules.books.Book;
 import com.unab_library.modules.books.BookSaveDTO;
 import com.unab_library.modules.users.AcademicDegree;
 import com.unab_library.modules.users.AcademicDegreeCategory;
+import com.unab_library.modules.users.Gender;
 import com.unab_library.modules.users.Person;
 import com.unab_library.modules.users.User;
 import com.unab_library.modules.users.UserStudentSaveDTO;
@@ -25,7 +24,6 @@ import org.apache.logging.log4j.Logger;
 
 
 public class App {
-    private static final BookLoanRepository bookLoanRepository = BookLoanRepository.getInstance();
     private static final String BOOK_ISBN = "978-3-16-148410-0";
     private static final Logger logger = LoggerFactory.getLogger(App.class);
     
@@ -65,7 +63,7 @@ public class App {
 
     public static void returnAllBooks() {
         // Return all books
-        List<BookLoan> bookLoans = bookLoanRepository.getAll();
+        List<BookLoan> bookLoans = BookLoan.getAll();
         for (BookLoan loan : bookLoans) {
             BookReturnSaveDTO newReturn = new BookReturnSaveDTO(loan.getBook().getIsbn(), loan.getUser().getPerson().getIdentityDocument());
             Result<BookReturn> result = BookReturn.createBookReturn(newReturn);
@@ -165,7 +163,7 @@ public class App {
         calendar.add(Calendar.DATE, loanDays);
         Date returnDate = calendar.getTime();
         BookLoanSaveDTO bookLoan = new BookLoanSaveDTO(BOOK_ISBN, "9030713-4", returnDate);
-        Result<BookLoan> result = bookLoanRepository.save(bookLoan);
+        Result<BookLoan> result = BookLoan.createLoan(bookLoan);
         if (result.isSuccess()) {
             logger.info("Book borrowed to teacher successfully\n" + result.getValue().toString());
         } else {
@@ -175,7 +173,7 @@ public class App {
 
     public static void saveAllBookLoansReceiptsPDFs() {
         logger.info("Saving all book loans receipts in PDF format");
-        List<BookLoan> bookLoans = bookLoanRepository.getAll();
+        List<BookLoan> bookLoans = BookLoan.getAll();
         // Print the book loans 
         for (BookLoan loan : bookLoans) {
             logger.info("Saving book loan receipt for " + loan.getUser().getPerson().getFullName());

@@ -1,4 +1,4 @@
-package com.unab_library.common.enums;
+package com.unab_library.modules.users;
 
 public enum Gender {
     MALE("M", "Masculino"),

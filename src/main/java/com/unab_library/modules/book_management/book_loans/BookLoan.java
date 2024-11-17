@@ -14,6 +14,7 @@ import com.unab_library.modules.users.User;
 import java.io.ByteArrayOutputStream;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 
 
@@ -110,6 +111,10 @@ public class BookLoan extends BookManagement implements BookLoanInterface {
 
     public String getReceiptPath() {
         return MediaUtils.RESOURCES_DIR + "receipts/loan_receipt_" + getBook().getIsbn() + "_" + getUser().getPerson().getIdentityDocument() + ".pdf";
+    }
+
+    public static List<BookLoan> getAll() {
+        return bookLoanRepository.getAll();
     }
 
     @Override
