@@ -10,6 +10,10 @@ El equipo de desarrollo de la biblioteca de la universidad ha creado este reposi
 
 La implementación asegura que la persistencia de datos se maneje de manera eficiente mediante el registro de todas las transacciones históricas de la app, y se adhiera a las mejores prácticas de la programación orientada a objetos.
 
+### UML (Unified Modeling Language) de la Aplicación
+
+![UML](UML.png)
+
 _**Nota**: Este proyecto es parte de un proyecto académico y no está destinado a ser utilizado en producción._
 
 ### Requisitos
